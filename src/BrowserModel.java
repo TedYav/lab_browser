@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 
 /**
@@ -15,23 +16,27 @@ import java.util.Map;
 public class BrowserModel {
     // constants
     public static final String PROTOCOL_PREFIX = "http://";
+    public static final String DEFAULT_RESOURCE_PACKAGE = "resources/";
     // state
     private URL myHome;
     private URL myCurrentURL;
     private int myCurrentIndex;
     private List<URL> myHistory;
     private Map<String, URL> myFavorites;
+    private ResourceBundle errorResources;
+    
 
 
     /**
      * Creates an empty model.
      */
-    public BrowserModel () {
+    public BrowserModel (String language) {
         myHome = null;
         myCurrentURL = null;
         myCurrentIndex = -1;
         myHistory = new ArrayList<>();
         myFavorites = new HashMap<>();
+        errorResources = ResourceBundle.getBundle(DEFAULT_RESOURCE_PACKAGE + language + "errors");        
     }
 
     /**
@@ -95,31 +100,37 @@ public class BrowserModel {
     /**
      * Sets current home page to the current URL being viewed.
      */
-    public void setHome () {
+    public void setHome() throws BrowserException  {
         // just in case, might be called before a page is visited
         if (myCurrentURL != null) {
             myHome = myCurrentURL;
+        }
+        else{
+        	throw new BrowserException(errorResources.getString("NullHomeError"));
         }
     }
 
     /**
      * Adds current URL being viewed to favorites collection with given name.
      */
-    public void addFavorite (String name) {
+    public void addFavorite (String name) throws BrowserException {
         // just in case, might be called before a page is visited
         if (name != null && !name.equals("") && myCurrentURL != null) {
             myFavorites.put(name, myCurrentURL);
+        }
+        else{
+        	throw new BrowserException(String.format("can't add that URL %s", name));
         }
     }
 
     /**
      * Returns URL from favorites associated with given name, null if none set.
      */
-    public URL getFavorite (String name) {
+    public URL getFavorite (String name) throws BrowserException {
         if (name != null && !name.equals("") && myFavorites.containsKey(name)) {
             return myFavorites.get(name);
         }
-        return null;
+        throw new BrowserException(String.format("Invalid URL (%s) entered.", name));
     }
 
     // deal with a potentially incomplete URL

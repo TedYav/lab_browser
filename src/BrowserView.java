@@ -22,6 +22,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javax.imageio.ImageIO;
 import org.w3c.dom.Document;
@@ -65,6 +66,7 @@ public class BrowserView {
     private ComboBox<String> myFavorites;
     // get strings from resource file
     private ResourceBundle myResources;
+
     // the data
     private BrowserModel myModel;
 
@@ -84,7 +86,8 @@ public class BrowserView {
         enableButtons();
         // create scene to hold UI
         myScene = new Scene(root, DEFAULT_SIZE.width, DEFAULT_SIZE.height);
-        //myScene.getStylesheets().add(DEFAULT_RESOURCE_PACKAGE + STYLESHEET);
+        //myScene.setFill(Color.BLACK);
+        myScene.getStylesheets().add(DEFAULT_RESOURCE_PACKAGE + STYLESHEET);
     }
 
     /**
@@ -141,7 +144,12 @@ public class BrowserView {
 
     // change page to favorite choice
     private void showFavorite (String favorite) {
-        showPage(myModel.getFavorite(favorite).toString());
+        try{
+    	showPage(myModel.getFavorite(favorite).toString());
+    	}
+        catch(BrowserException e){
+        	showError(e.getMessage());
+        }
     }
 
     // update just the view to display given URL
@@ -159,7 +167,11 @@ public class BrowserView {
         Optional<String> response = input.showAndWait();
         // did user make a choice?
         if (response.isPresent()) {
-            myModel.addFavorite(response.get());
+            try {
+				myModel.addFavorite(response.get());
+			} catch (BrowserException e) {
+				showError(e.getMessage());
+			}
             myFavorites.getItems().add(response.get());
         }
     }
@@ -221,13 +233,24 @@ public class BrowserView {
     // make buttons for setting favorites/home URLs
     private Node makePreferencesPanel () {
         HBox result = new HBox();
+        
+        myFavorites = new ComboBox<String>();
+        myFavorites.setPromptText(myResources.getString("FavoriteFirstItem"));
+        myFavorites.valueProperty().addListener((o, s1, s2)->showFavorite(s2));
+        
+        result.getChildren().add(makeButton("AddFavoriteCommand", event -> addFavorite()));
+        result.getChildren().add(myFavorites);        
         result.getChildren().add(makeButton("SetHomeCommand", event -> {
-            myModel.setHome();
+            try {
+				myModel.setHome();
+			} catch (Exception e) {
+				showError(e.getMessage());
+			}
             enableButtons();
         }));
         return result;
     }
-
+    
     // makes a button using either an image or a label
     private Button makeButton (String property, EventHandler<ActionEvent> handler) {
         // represent all supported image suffixes
@@ -246,6 +269,10 @@ public class BrowserView {
         return result;
     }
 
+    private void showFavorites(){
+    	myFavorites.show();
+    }
+    
     // make text field for input
     private TextField makeInputField (int width, EventHandler<ActionEvent> handler) {
         TextField result = new TextField();

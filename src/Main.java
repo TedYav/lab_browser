@@ -16,7 +16,7 @@ public class Main extends Application {
     @Override
     public void start (Stage stage) {
         // create program specific components
-        BrowserModel model = new BrowserModel();
+        BrowserModel model = new BrowserModel("English");
         BrowserView display = new BrowserView(model, "English");
         // give the window a title
         stage.setTitle(TITLE);
